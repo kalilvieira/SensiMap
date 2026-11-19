@@ -1,0 +1,296 @@
+classDiagram
+    direction LR
+    class Usuario {
+        -Long id
+        -String apelido
+        -LocalDateTime criadoEm
+        +getId() Long
+        +getApelido() String
+        +getCriadoEm() LocalDateTime
+    }
+    class Local {
+        -Long id
+        -String nome
+        -String endereco
+        -String bairro
+        -String descricao
+        -BigDecimal latitude
+        -BigDecimal longitude
+        -boolean dadosDemonstrativos
+        -LocalDateTime criadoEm
+        +getId() Long
+        +getNome() String
+        +getEndereco() String
+        +getBairro() String
+        +getDescricao() String
+        +getLatitude() BigDecimal
+        +getLongitude() BigDecimal
+        +isDadosDemonstrativos() boolean
+        +getCriadoEm() LocalDateTime
+    }
+    class Avaliacao {
+        -Long id
+        -Usuario usuario
+        -Local local
+        -LocalDate dataVisita
+        -PeriodoDia periodo
+        -int ruido
+        -int movimento
+        -int imprevisibilidade
+        -String comentario
+        -LocalDateTime criadoEm
+        +getId() Long
+        +getUsuario() Usuario
+        +getLocal() Local
+        +getDataVisita() LocalDate
+        +getPeriodo() PeriodoDia
+        +getRuido() int
+        +getMovimento() int
+        +getImprevisibilidade() int
+        +getComentario() String
+        +getCriadoEm() LocalDateTime
+    }
+    class Estimulo {
+        -Long id
+        -String nome
+        -String descricao
+        +getId() Long
+        +getNome() String
+        +getDescricao() String
+    }
+    class LocalEstimulo {
+        -Local local
+        -Estimulo estimulo
+        +getLocal() Local
+        +getEstimulo() Estimulo
+    }
+    class PeriodoDia {
+        <<enumeration>>
+        MANHA
+        TARDE
+        NOITE
+    }
+    class PerfilAcesso {
+        <<enumeration>>
+        USUARIO
+    }
+    class ContaAcesso {
+        +long usuarioId
+        +String apelido
+        +String senhaHash
+        +String senhaSalt
+        +int senhaIteracoes
+        +PerfilAcesso perfil
+        +boolean ativa
+    }
+    class AcessoAutenticado {
+        +long usuarioId
+        +String apelido
+        +PerfilAcesso perfil
+    }
+    Usuario "1" <-- "0..1" ContaAcesso : credencial
+    ContaAcesso --> PerfilAcesso
+    class DatabaseConfig {
+        -String url
+        -String usuario
+        -String senha
+        +fromEnvironment()$ DatabaseConfig
+        +fromEnvironment(Map ambiente)$ DatabaseConfig
+        +abrirConexao() Connection
+    }
+    class ValidacaoUtil {
+        +id(Long valor)$ Long
+        +texto(String valor, String campo, int limite, boolean obrigatorio)$ String
+        +nota(int valor, String campo)$ int
+    }
+    class Main {
+        +main(String[] args)$ void
+    }
+    Usuario "1" <-- "0..*" Avaliacao : usuario
+    Local "1" <-- "0..*" Avaliacao : local
+    Local "1" <-- "0..*" LocalEstimulo : local
+    Estimulo "1" <-- "0..*" LocalEstimulo : estimulo
+    Avaliacao --> PeriodoDia
+    Usuario ..> ValidacaoUtil
+    Local ..> ValidacaoUtil
+    Avaliacao ..> ValidacaoUtil
+    Estimulo ..> ValidacaoUtil
+    Main ..> DatabaseConfig
+    note for Usuario "Modelos imutáveis: construtor novo e construtor de reconstituição. ID nulo até persistir."
+    note for LocalEstimulo "Construtor exige local e estímulo com ID; PK composta no banco."
+    class CrudDAO {
+        <<interface>>
+        +listar() List~T~
+        +buscarPorId(long id) Optional~T~
+        +inserir(T entidade) T
+        +atualizar(T entidade) void
+        +excluir(long id) void
+    }
+    class UsuarioDAO {
+        <<interface>>
+    }
+    class LocalDAO {
+        <<interface>>
+        +pesquisar(String nome, String bairro) List~Local~
+    }
+    class EstimuloDAO {
+        <<interface>>
+    }
+    class AvaliacaoDAO {
+        <<interface>>
+        +listarPorLocal(long localId) List~Avaliacao~
+        +indicadores(long localId, PeriodoDia periodo) IndicadoresSensoriais
+    }
+    class LocalEstimuloDAO {
+        <<interface>>
+        +listarPorLocal(long localId) List~Estimulo~
+        +associar(long localId, long estimuloId) void
+        +desassociar(long localId, long estimuloId) void
+    }
+    class ContaAcessoDAO {
+        <<interface>>
+        +buscarPorApelido(String apelido) Optional~ContaAcesso~
+        +inserir(ContaAcesso conta) void
+    }
+    CrudDAO <|-- UsuarioDAO
+    CrudDAO <|-- LocalDAO
+    CrudDAO <|-- EstimuloDAO
+    CrudDAO <|-- AvaliacaoDAO
+    UsuarioDAO <|.. JdbcUsuarioDAO
+    LocalDAO <|.. JdbcLocalDAO
+    EstimuloDAO <|.. JdbcEstimuloDAO
+    AvaliacaoDAO <|.. JdbcAvaliacaoDAO
+    LocalEstimuloDAO <|.. JdbcLocalEstimuloDAO
+    ContaAcessoDAO <|.. JdbcContaAcessoDAO
+    UsuarioService --> UsuarioDAO
+    LocalService --> LocalDAO
+    EstimuloService --> EstimuloDAO
+    AvaliacaoService --> AvaliacaoDAO
+    AvaliacaoService --> UsuarioService
+    AvaliacaoService --> LocalService
+    LocalEstimuloService --> LocalEstimuloDAO
+    LocalEstimuloService --> LocalService
+    LocalEstimuloService --> EstimuloService
+    AuthService --> UsuarioService
+    AuthService --> ContaAcessoDAO
+    AuthService ..> SenhaUtil
+    class SenhaUtil {
+        +proteger(String senha)$ SenhaProtegida
+        +corresponde(String senha, String hash, String salt, int iteracoes)$ boolean
+    }
+    class IndicadoresSensoriais {
+        <<record>>
+        +quantidade() long
+        +ruido() BigDecimal
+        +movimento() BigDecimal
+        +imprevisibilidade() BigDecimal
+        +periodo() PeriodoDia
+        +ultimaVisita() LocalDate
+        +dadosSuficientes() boolean
+    }
+    class ClassificacaoSensorial {
+        <<enumeration>>
+        BAIXA
+        MODERADA
+        ALTA
+        DADOS_INSUFICIENTES
+        +getDescricao() String
+    }
+    class IndicadorService {
+        +classificar(BigDecimal media, long quantidade) ClassificacaoSensorial
+        +formatarMedia(BigDecimal media) String
+    }
+    class PersistenciaException {
+        -String codigo
+        +getCodigo() String
+    }
+    class ConsoleCrud {
+        +ajuda()$ void
+        +executar(String[] args) void
+    }
+    class DemonstracaoCrud {
+        +executar(Connection conexao)$ void
+    }
+    class JdbcUtil {
+        ~traduzir(SQLException erro)$ PersistenciaException
+        ~chaveGerada(PreparedStatement comando)$ long
+        ~buscaLiteral(String texto)$ String
+    }
+    class JdbcMapeamento {
+        ~usuario(ResultSet r, String prefixo)$ Usuario
+        ~local(ResultSet r, String prefixo)$ Local
+        ~estimulo(ResultSet r)$ Estimulo
+        ~avaliacao(ResultSet r)$ Avaliacao
+    }
+    JdbcUsuarioDAO ..> JdbcUtil
+    JdbcLocalDAO ..> JdbcUtil
+    JdbcEstimuloDAO ..> JdbcUtil
+    JdbcAvaliacaoDAO ..> JdbcUtil
+    JdbcLocalEstimuloDAO ..> JdbcUtil
+    JdbcUsuarioDAO ..> JdbcMapeamento
+    JdbcLocalDAO ..> JdbcMapeamento
+    JdbcEstimuloDAO ..> JdbcMapeamento
+    JdbcAvaliacaoDAO ..> JdbcMapeamento
+    JdbcLocalEstimuloDAO ..> JdbcMapeamento
+    JdbcUtil ..> PersistenciaException
+    JdbcAvaliacaoDAO ..> IndicadoresSensoriais
+    IndicadoresSensoriais --> PeriodoDia
+    IndicadorService ..> ClassificacaoSensorial
+    Main ..> ConsoleCrud
+    Main ..> DemonstracaoCrud
+    ConsoleCrud --> UsuarioService
+    ConsoleCrud --> LocalService
+    ConsoleCrud --> EstimuloService
+    ConsoleCrud --> AvaliacaoService
+    ConsoleCrud --> LocalEstimuloService
+    ConsoleCrud --> IndicadorService
+    DemonstracaoCrud ..> UsuarioService
+    DemonstracaoCrud ..> LocalService
+    DemonstracaoCrud ..> EstimuloService
+    DemonstracaoCrud ..> AvaliacaoService
+    DemonstracaoCrud ..> LocalEstimuloService
+    DemonstracaoCrud ..> IndicadorService
+    note for CrudDAO "Contrato genérico CrudDAO<T>; implementações usam PreparedStatement."
+    note for Main "Abre e fecha a conexão; controla commit/rollback de cada comando."
+    class ApiServer {
+        +iniciar()$ void
+    }
+    class ApiHandler {
+        -DatabaseConfig config
+        +handle(HttpExchange exchange) void
+    }
+    class GerenciadorSessoes {
+        ~criar(AcessoAutenticado acesso) Sessao
+        ~buscar(HttpExchange exchange) Optional~Sessao~
+        ~remover(HttpExchange exchange) void
+    }
+    class Parametros {
+        -Map~String,String~ valores
+        +texto(String nome) String
+        +id(String nome) long
+        +nota(String nome) int
+        +data() LocalDate
+        +periodo(boolean opcional) PeriodoDia
+        +decimal(String nome) BigDecimal
+    }
+    class RespostaJson {
+        +converter(Object valor)$ Object
+    }
+    class JsonUtil {
+        +escrever(Object valor)$ String
+    }
+    Main ..> ApiServer
+    ApiServer --> ApiHandler
+    ApiHandler --> DatabaseConfig
+    ApiHandler --> UsuarioService
+    ApiHandler --> LocalService
+    ApiHandler --> EstimuloService
+    ApiHandler --> AvaliacaoService
+    ApiHandler --> LocalEstimuloService
+    ApiHandler --> AuthService
+    ApiHandler --> GerenciadorSessoes
+    ApiHandler ..> Parametros
+    ApiHandler ..> RespostaJson
+    ApiHandler ..> JsonUtil
+    note for ApiServer "Escuta somente 127.0.0.1:8080 e serve uma lista fechada de recursos."
+    note for ApiHandler "Uma conexão e uma transação por requisição mutável."

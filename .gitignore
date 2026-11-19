@@ -1,0 +1,15 @@
+target/
+.env
+.env.*
+!.env.example
+*.log
+.DS_Store
+.idea/
+*.iml
+.vscode/
+
+# Arquivos internos do ambiente de desenvolvimento
+AGENTS.md
+PROMPT_INICIAL_CODEX.md
+docs/ESPECIFICACAO_TECNICA.md
+.github/modernize/

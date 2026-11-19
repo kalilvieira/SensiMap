@@ -1,0 +1,52 @@
+erDiagram
+    USUARIO ||--o{ AVALIACAO : registra
+    USUARIO ||--o| CONTA_ACESSO : autentica
+    LOCAL ||--o{ AVALIACAO : recebe
+    LOCAL ||--o{ LOCAL_ESTIMULO : possui
+    ESTIMULO ||--o{ LOCAL_ESTIMULO : categoriza
+    USUARIO {
+        NUMBER_19 id PK "IDENTITY"
+        VARCHAR2_60 apelido UK
+        TIMESTAMP criado_em
+    }
+    CONTA_ACESSO {
+        NUMBER_19 usuario_id PK,FK "ON DELETE CASCADE"
+        VARCHAR2_100 senha_hash
+        VARCHAR2_100 senha_salt
+        NUMBER_9 senha_iteracoes ">= 100000"
+        VARCHAR2_15 perfil "USUARIO"
+        NUMBER_1 ativo "0 ou 1"
+        TIMESTAMP criado_em
+    }
+    LOCAL {
+        NUMBER_19 id PK "IDENTITY"
+        VARCHAR2_120 nome
+        VARCHAR2_180 endereco "opcional"
+        VARCHAR2_80 bairro
+        VARCHAR2_500 descricao "opcional"
+        NUMBER_9_6 latitude "opcional; par com longitude"
+        NUMBER_9_6 longitude "opcional; par com latitude"
+        NUMBER_1 dados_demonstrativos "0 ou 1; default 1"
+        TIMESTAMP criado_em
+    }
+    AVALIACAO {
+        NUMBER_19 id PK "IDENTITY"
+        NUMBER_19 usuario_id FK "UNIQUE conjunto com local, data e periodo"
+        NUMBER_19 local_id FK
+        DATE data_visita "sem hora; não futura"
+        VARCHAR2_10 periodo "MANHA, TARDE ou NOITE"
+        NUMBER_1 ruido "1 a 5"
+        NUMBER_1 movimento "1 a 5"
+        NUMBER_1 imprevisibilidade "1 a 5"
+        VARCHAR2_500 comentario "opcional"
+        TIMESTAMP criado_em
+    }
+    ESTIMULO {
+        NUMBER_19 id PK "IDENTITY"
+        VARCHAR2_80 nome UK
+        VARCHAR2_300 descricao "opcional"
+    }
+    LOCAL_ESTIMULO {
+        NUMBER_19 local_id PK,FK "ON DELETE CASCADE"
+        NUMBER_19 estimulo_id PK,FK "ON DELETE CASCADE"
+    }
