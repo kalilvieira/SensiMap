@@ -8,30 +8,31 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.Executors;
 
-/** Servidor exclusivamente local. Não registra IPs nem expõe arquivos do projeto. */
+/** Servidor HTTP local ou publicado por proxy HTTPS. Não registra IPs nem expõe arquivos do projeto. */
 public final class ApiServer {
     private static final Set<String> ARQUIVOS=Set.of("index.html","login.html","cadastro.html","locais.html","contribuir.html","favicon.svg",
             "css/styles.css","js/api.js","js/regras.js","js/ui.js","js/auth.js","js/login.js","js/cadastro.js","js/locais.js","js/contribuir.js");
     private ApiServer() { }
     public static void iniciar() throws IOException {
         DatabaseConfig config=DatabaseConfig.fromEnvironment();
-        HttpServer server=HttpServer.create(new InetSocketAddress("127.0.0.1",8080),0);
+        ServidorConfig servidorConfig=ServidorConfig.fromEnvironment();
+        HttpServer server=HttpServer.create(new InetSocketAddress(servidorConfig.host(),servidorConfig.port()),0);
         var executor=Executors.newFixedThreadPool(4);
         server.setExecutor(executor);
-        var api=new ApiHandler(config);
+        var api=new ApiHandler(config,servidorConfig.remoto());
         server.createContext("/",x->{
             try {
                 var h=x.getResponseHeaders();
                 h.set("X-Content-Type-Options","nosniff");h.set("Referrer-Policy","no-referrer");
                 h.set("Content-Security-Policy","default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'");
                 String host=x.getRequestHeaders().getFirst("Host");
-                if("localhost:8080".equals(host)){
+                if(servidorConfig.redirectLocalhost(host)){
                     h.set("Location","http://127.0.0.1:8080"+x.getRequestURI().toASCIIString());
                     x.sendResponseHeaders(307,-1);return;
                 }
-                if(!"127.0.0.1:8080".equals(host)) {texto(x,403,"Host não permitido.");return;}
+                if(!servidorConfig.hostAllowed(host)) {texto(x,403,"Host não permitido.");return;}
                 String origin=x.getRequestHeaders().getFirst("Origin");
-                if(origin!=null&&!"http://127.0.0.1:8080".equals(origin)){texto(x,403,"Origem não permitida.");return;}
+                if(!servidorConfig.originAllowed(origin)){texto(x,403,"Origem não permitida.");return;}
                 String path=x.getRequestURI().getPath();
                 if(path.startsWith("/api/")){api.handle(x);return;}
                 if(!x.getRequestMethod().equals("GET")){texto(x,405,"Método não permitido.");return;}
@@ -47,9 +48,9 @@ public final class ApiServer {
         });
         Runtime.getRuntime().addShutdownHook(new Thread(()->{server.stop(1);executor.shutdownNow();}));
         server.start();
-        System.out.println("SensiMap disponível em http://127.0.0.1:8080");
+        System.out.println("SensiMap disponível em " + servidorConfig.displayAddress());
         System.out.println("Modo Oracle: operações web usarão JDBC; a conexão será verificada em cada solicitação.");
-        System.out.println("Para encerrar, pressione Ctrl+C neste terminal.");
+        if(!servidorConfig.remoto())System.out.println("Para encerrar, pressione Ctrl+C neste terminal.");
     }
     private static void texto(HttpExchange x,int status,String msg)throws IOException{
         byte[] b=msg.getBytes(StandardCharsets.UTF_8);x.getResponseHeaders().set("Content-Type","text/plain; charset=utf-8");x.sendResponseHeaders(status,b.length);x.getResponseBody().write(b);

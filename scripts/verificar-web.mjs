@@ -49,15 +49,20 @@ check(()=>assert.equal(chamadas[1].opcoes.body,undefined));
 const login=await entrarUsuario('perfil_teste','senha-segura');
 check(()=>assert.equal(login.apelido,'perfil_teste'));
 await assert.rejects(()=>entrarUsuario('perfil_teste','senha-incorreta'),/incorretos/);checks++;
+globalThis.fetch=async()=>{throw new Error('rede indisponível');};
+await assert.rejects(()=>entrarUsuario('perfil_teste','senha-segura'),/Serviço indisponível/);checks++;
 
 for(const arquivo of ['api.js','auth.js','cadastro.js','contribuir.js']){
   const fonte=await readFile(new URL(`../src/main/resources/web/js/${arquivo}`,import.meta.url),'utf8');
   check(()=>assert.doesNotMatch(fonte,/localStorage|sessionStorage/));
   check(()=>assert.doesNotMatch(fonte,/['\"]DEMO['\"]/));
+  check(()=>assert.doesNotMatch(fonte,/127\.0\.0\.1|localhost/));
 }
 
 const paginaInicial=await readFile(new URL('../src/main/resources/web/index.html',import.meta.url),'utf8');
 check(()=>assert.doesNotMatch(paginaInicial,/id="pagina-status"/));
 check(()=>assert.doesNotMatch(paginaInicial,/js\/inicio\.js/));
+const paginaCadastro=await readFile(new URL('../src/main/resources/web/cadastro.html',import.meta.url),'utf8');
+check(()=>assert.doesNotMatch(paginaCadastro,/ambiente local|autenticação segura de produção/));
 
 console.log(`${checks} verificações JavaScript aprovadas. Persistência local desativada; sem acesso ao Oracle.`);

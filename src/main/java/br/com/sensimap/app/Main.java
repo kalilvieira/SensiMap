@@ -16,7 +16,7 @@ public final class Main {
         if (args.length == 1 && args[0].equals("--web")) {
             try { br.com.sensimap.web.ApiServer.iniciar(); }
             catch (IllegalArgumentException e) { System.err.println("Configuração inválida: " + e.getMessage()); System.exit(2); }
-            catch (java.io.IOException e) { System.err.println("Não foi possível iniciar na porta 8080. Confira se outro servidor já está usando a porta."); System.exit(1); }
+            catch (java.io.IOException e) { System.err.println("Não foi possível iniciar o servidor HTTP. Confira o host, a porta e se outro processo já está usando o endereço."); System.exit(1); }
             return;
         }
         if (args.length == 1 && args[0].equals("--ajuda")) {

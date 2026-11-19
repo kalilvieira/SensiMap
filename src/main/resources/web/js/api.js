@@ -1,7 +1,7 @@
 import {validar} from './regras.js';
 async function request(path,method='GET',data) {
-  let r;try {r=await fetch(`/api/${path}`,{method,headers:method==='GET'?{}:{'Content-Type':'application/x-www-form-urlencoded','X-SensiMap':'local'},body:data?new URLSearchParams(Object.entries(data).map(([k,v])=>[k,v??''])):undefined});}catch{throw new Error('Servidor indisponível. Inicie o SensiMap e tente novamente.');}
-  let body;try{body=await r.json();}catch{throw new Error('Resposta inesperada do servidor. Reabra pelo endereço http://127.0.0.1:8080.');}
+  let r;try {r=await fetch(`/api/${path}`,{method,headers:method==='GET'?{}:{'Content-Type':'application/x-www-form-urlencoded','X-SensiMap':'local'},body:data?new URLSearchParams(Object.entries(data).map(([k,v])=>[k,v??''])):undefined});}catch{throw new Error('Serviço indisponível. Tente novamente em instantes.');}
+  let body;try{body=await r.json();}catch{throw new Error('O serviço não respondeu corretamente. Tente novamente em instantes.');}
   if(!r.ok)throw new Error(body.erro||'Não foi possível concluir a operação.');return body;
 }
 export const api={

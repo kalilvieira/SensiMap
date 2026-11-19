@@ -13,6 +13,9 @@ final class GerenciadorSessoes {
     private static final Duration DURACAO=Duration.ofHours(8);
     private final SecureRandom aleatorio=new SecureRandom();
     private final Map<String,Sessao> sessoes=new ConcurrentHashMap<>();
+    private final boolean cookieSeguro;
+
+    GerenciadorSessoes(boolean cookieSeguro){this.cookieSeguro=cookieSeguro;}
 
     Sessao criar(HttpExchange x,AcessoAutenticado acesso) {
         byte[] bytes=new byte[32];aleatorio.nextBytes(bytes);
@@ -28,9 +31,10 @@ final class GerenciadorSessoes {
     }
     void remover(HttpExchange x){String token=token(x);if(token!=null)sessoes.remove(token);}
     void definirCookie(HttpExchange x,Sessao s){
-        x.getResponseHeaders().add("Set-Cookie",COOKIE+"="+s.token()+"; Path=/; HttpOnly; SameSite=Strict; Max-Age="+DURACAO.toSeconds());
+        x.getResponseHeaders().add("Set-Cookie",cookie(s.token(),DURACAO.toSeconds()));
     }
-    void limparCookie(HttpExchange x){x.getResponseHeaders().add("Set-Cookie",COOKIE+"=; Path=/; HttpOnly; SameSite=Strict; Max-Age=0");}
+    void limparCookie(HttpExchange x){x.getResponseHeaders().add("Set-Cookie",cookie("",0));}
+    private String cookie(String token,long maxAge){return COOKIE+"="+token+"; Path=/; HttpOnly; SameSite=Strict; Max-Age="+maxAge+(cookieSeguro?"; Secure":"");}
     private String token(HttpExchange x){
         for(String cabecalho:x.getRequestHeaders().getOrDefault("Cookie",List.of()))
             for(String parte:cabecalho.split(";")){String[] kv=parte.strip().split("=",2);if(kv.length==2&&kv[0].equals(COOKIE))return kv[1];}

@@ -3,6 +3,7 @@ package br.com.sensimap.web;
 import br.com.sensimap.util.JsonUtil;
 import br.com.sensimap.util.SenhaUtil;
 import java.util.List;
+import java.util.Map;
 
 public final class VerificacaoWeb {
     private static int n;
@@ -31,7 +32,26 @@ public final class VerificacaoWeb {
         verificar(SenhaUtil.corresponde("senha-segura",senha.hash(),senha.salt(),senha.iteracoes()));
         verificar(!SenhaUtil.corresponde("senha-incorreta",senha.hash(),senha.salt(),senha.iteracoes()));
         rejeitar(()->SenhaUtil.proteger("curta"));
-        System.out.println(n+" verificações de JSON/parâmetros HTTP aprovadas (sem Oracle).");
+        var local=ServidorConfig.fromEnvironment(Map.of());
+        verificar(local.host().equals("127.0.0.1")&&local.port()==8080&&!local.remoto());
+        verificar(local.hostAllowed("127.0.0.1:8080")&&!local.hostAllowed("outro.example"));
+        verificar(local.originAllowed(null)&&local.originAllowed("http://127.0.0.1:8080"));
+        verificar(local.redirectLocalhost("localhost:8080"));
+        var remoto=ServidorConfig.fromEnvironment(Map.of(
+                "PORT","10000",
+                "APP_ORIGIN","https://sensimap.vercel.app/, https://preview.vercel.app"));
+        verificar(remoto.host().equals("0.0.0.0")&&remoto.port()==10000&&remoto.remoto());
+        verificar(remoto.hostAllowed("sensimap-api.onrender.com"));
+        verificar(remoto.originAllowed("https://sensimap.vercel.app"));
+        verificar(remoto.originAllowed("https://preview.vercel.app"));
+        verificar(!remoto.originAllowed("https://outro.example"));
+        verificar(!remoto.redirectLocalhost("localhost:8080"));
+        rejeitar(()->ServidorConfig.fromEnvironment(Map.of("PORT","abc","APP_ORIGIN","https://sensimap.vercel.app")));
+        rejeitar(()->ServidorConfig.fromEnvironment(Map.of("PORT","70000","APP_ORIGIN","https://sensimap.vercel.app")));
+        rejeitar(()->ServidorConfig.fromEnvironment(Map.of("PORT","10000")));
+        rejeitar(()->ServidorConfig.fromEnvironment(Map.of("PORT","10000","APP_ORIGIN","http://sensimap.vercel.app")));
+        rejeitar(()->ServidorConfig.fromEnvironment(Map.of("PORT","10000","APP_ORIGIN","https://sensimap.vercel.app/login")));
+        System.out.println(n+" verificações de JSON, parâmetros e configuração HTTP aprovadas (sem Oracle).");
     }
     private static void verificar(boolean v){if(!v)throw new AssertionError("Contrato web divergente.");n++;}
     private static void rejeitar(Runnable r){try{r.run();}catch(IllegalArgumentException e){n++;return;}throw new AssertionError("Entrada inválida aceita.");}

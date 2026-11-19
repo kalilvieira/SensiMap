@@ -10,7 +10,7 @@ form.addEventListener('submit',async e=>{
   try{
     const sessao=await cadastrarUsuario(valores.apelido,valores.senha);
     const confirmada=await sessaoAtual();
-    if(!confirmada||confirmada.usuarioId!==sessao.usuarioId)throw new Error('O cadastro foi concluído, mas o navegador não manteve a sessão. Entre novamente por http://127.0.0.1:8080.');
+    if(!confirmada||confirmada.usuarioId!==sessao.usuarioId)throw new Error('O cadastro foi concluído, mas a sessão não pôde ser mantida. Tente entrar novamente.');
     redirecionarAposAcesso(sessao,'locais.html');
   }catch(erro){mensagem(erro.message||'Não foi possível criar o acesso.',true);}finally{botao.disabled=false;}
 });

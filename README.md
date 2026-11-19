@@ -8,6 +8,8 @@ MVP acadêmico da FIAP Global Solution 2026/2 para consulta de percepções sens
 
 A entrega utiliza **Oracle no servidor da FIAP**, acessado pelo Java via JDBC. Oracle é uma das opções de banco relacional aceitas pelo enunciado da Global Solution.
 
+**Desvio documentado:** a especificação técnica inicial cita PostgreSQL e execução apenas local, mas a decisão consolidada do projeto é usar o Oracle acadêmico da FIAP e permitir publicação do frontend. O domínio, o CRUD JDBC e as regras acadêmicas foram preservados; a publicação acrescenta apenas contêiner e proxy HTTP, sem Spring, JPA ou persistência no navegador.
+
 - Java 17 e JDBC continuam obrigatórios; Maven gerencia somente build e driver.
 - Driver: `com.oracle.database.jdbc:ojdbc11:23.26.4.0.0`, disponível no [catálogo oficial Oracle JDBC](https://www.oracle.com/database/technologies/appdev/jdbc-downloads.html).
 - SQL destinado a Oracle 19c ou superior, sem dependência de recursos exclusivos do 23ai. A versão do servidor FIAP ainda precisa ser confirmada.
@@ -23,6 +25,9 @@ Não é necessário instalar Oracle localmente ou criar um banco na FIAP. Utiliz
 ```text
 pom.xml                            build Java 17 e driver Oracle
 .env.example                       modelo sem senha real
+Dockerfile                         build e execução do backend Java 17
+render.yaml                        infraestrutura declarativa do backend
+vercel.json                        frontend estático e proxy de /api
 database/01_schema.sql              seis tabelas, índices e gatilho
 database/02_seed.sql                locais reais e relatos simulados
 database/03_consultas_relatorios.sql JOIN, AVG/COUNT e locais sem avaliações
@@ -84,7 +89,7 @@ cp .env.example .env
 | `DB_URL` | Service name: `jdbc:oracle:thin:@//HOST_FIAP:1521/SERVICE_NAME_FIAP` |
 | `DB_URL` (alternativa) | SID: `jdbc:oracle:thin:@HOST_FIAP:1521:SID_FIAP` |
 | `DB_USER` | Usuário acadêmico informado pela FIAP |
-| `DB_PASSWORD` | Senha desse usuário, preenchida somente no ambiente local |
+| `DB_PASSWORD` | Senha desse usuário, definida localmente ou como segredo do backend |
 
 `HOST_FIAP`, `SERVICE_NAME_FIAP`, `SID_FIAP` e `USUARIO_FIAP` são marcadores, não dados de acesso. Use a porta informada pela FIAP caso seja diferente de 1521. Não coloque usuário/senha dentro da URL. A configuração atual aceita a conexão Thin convencional por service name ou SID, sem parâmetros adicionais na URL; se a instituição exigir wallet/TLS específico, será necessário configurar esse acesso antes de validar a conexão.
 
@@ -239,7 +244,7 @@ Quando aparecer `SensiMap disponível em http://127.0.0.1:8080`, abra:
 http://127.0.0.1:8080
 ```
 
-Mantenha o terminal aberto enquanto utiliza o site. Para encerrar, pressione `Ctrl+C`. O servidor aceita conexões somente em `127.0.0.1:8080`; não foi projetado para publicação aberta.
+Mantenha o terminal aberto enquanto utiliza o site. Para encerrar, pressione `Ctrl+C`. Sem `PORT`, o servidor aceita conexões somente em `127.0.0.1:8080`. Em hospedagem, `PORT` ativa a escuta em `0.0.0.0` e exige `APP_ORIGIN` com a origem HTTPS exata do frontend.
 
 O site exige `DB_URL`, `DB_USER` e `DB_PASSWORD`. Sem as três variáveis, o servidor recusa a inicialização com uma mensagem controlada. Não existe modo de persistência no navegador: cadastro, login, catálogo e formulários usam somente a API Java/JDBC e o Oracle. Cada cadastro cria `USUARIO` e `CONTA_ACESSO` na mesma transação.
 
@@ -249,9 +254,23 @@ O site exige `DB_URL`, `DB_USER` e `DB_PASSWORD`. Sem as três variáveis, o ser
 - **Área do usuário:** Explorar e Contribuir, acessíveis depois do cadastro ou entrada por pseudônimo;
 - **Saída:** encerra a sessão e retorna à página inicial.
 
-Não existe acesso administrativo na interface ou na autenticação. Em modo Oracle, o cadastro de usuário grava pseudônimo e credencial com perfil `USUARIO`; PBKDF2-HMAC-SHA256 usa salt aleatório e 120 mil iterações. O servidor mantém um token opaco por oito horas em cookie `HttpOnly` e `SameSite=Strict` e limita avaliações ao usuário da sessão. Nenhum cadastro, senha ou percepção é salvo no navegador. Reiniciar o Java encerra todas as sessões. Como o MVP roda em HTTP apenas no endereço local, este fluxo não substitui autenticação de produção com HTTPS, recuperação de senha, bloqueio por tentativas e gestão de segredos.
+Não existe acesso administrativo na interface ou na autenticação. Em modo Oracle, o cadastro de usuário grava pseudônimo e credencial com perfil `USUARIO`; PBKDF2-HMAC-SHA256 usa salt aleatório e 120 mil iterações. O servidor mantém um token opaco por oito horas em cookie `HttpOnly`, `SameSite=Strict` e, no ambiente publicado, `Secure`; ele limita avaliações ao usuário da sessão. Nenhum cadastro, senha ou percepção é salvo no navegador. Reiniciar o backend encerra todas as sessões, mas os usuários e relatos continuam no Oracle.
 
 O frontend cria conteúdo dinâmico com `textContent`; comentários não são interpretados como HTML. As três dimensões permanecem independentes, o recorte por período é exibido e locais sem relatos explicam que ausência de registros não significa ausência de estímulos. A API exige sessão de usuário para os dados internos; somente configuração e rotas de autenticação são públicas. O CRUD administrativo permanece demonstrável pelo console Java/JDBC, sem uma área web dedicada.
+
+## Publicar frontend e backend
+
+A Vercel hospeda somente os arquivos estáticos. Cadastro, login, catálogo e avaliações dependem do backend Java; por isso o `vercel.json` encaminha `/api/*` para o endereço configurado em `BACKEND_URL`. O fluxo publicado é `navegador → Vercel /api → backend Java → Oracle FIAP`.
+
+1. No Render, crie um **Blueprint** a partir deste repositório. O arquivo `render.yaml` cria o serviço Docker `sensimap-api`.
+2. Cadastre no Render os segredos `DB_URL`, `DB_USER` e `DB_PASSWORD`. Em `APP_ORIGIN`, informe a URL exata da Vercel, por exemplo `https://seu-projeto.vercel.app`, sem caminho nem barra final.
+3. Aguarde o serviço ficar disponível e copie sua URL HTTPS, por exemplo `https://sensimap-api.onrender.com`.
+4. Na Vercel, em **Project Settings → Environment Variables**, crie `BACKEND_URL` com essa URL, sem barra final, para o ambiente Production. Faça um novo deploy.
+5. Abra `https://seu-projeto.vercel.app/api/config`. A resposta esperada é `{"modo":"ORACLE"}`. Depois teste cadastro, saída e login pelo domínio da Vercel.
+
+Não coloque credenciais no GitHub, no `vercel.json` ou no `render.yaml`. No plano gratuito, o Render pode suspender o backend após inatividade; a primeira solicitação seguinte pode demorar cerca de um minuto. Como as sessões ficam na memória do processo, uma reinicialização exige novo login, sem apagar o cadastro nem os relatos do Oracle. A rede do provedor também precisa conseguir alcançar o endereço Oracle da FIAP; se o banco aceitar somente VPN/rede institucional, será necessário hospedar o backend em um ambiente com esse acesso.
+
+Referências: [Web Services do Render](https://render.com/docs/web-services), [variáveis de ambiente do Render](https://render.com/docs/configure-environment-variables), [plano gratuito do Render](https://render.com/docs/free) e [configuração `vercel.json`](https://vercel.com/docs/project-configuration/vercel-json).
 
 ## Verificação local sem Maven
 
@@ -270,7 +289,7 @@ As regras e a ausência de persistência no navegador podem ser verificadas sepa
 node --experimental-default-type=module scripts/verificar-web.mjs
 ```
 
-Em 18/11/2026, esse caminho foi verificado com JDK 26 e compatibilidade de linguagem/API/bytecode 17. Foram aprovadas 120 verificações Java, 43 verificações JavaScript e 30 verificações HTTP com acesso somente de leitura ao Oracle da FIAP. Executar em um **runtime JDK 17**, fazer o build Maven e ensaiar uma gravação/releitura pelo navegador continuam pendentes neste ambiente. Não use o JAR antigo em `target/sensimap-0.1.0.jar` como evidência desta etapa; ele só será atualizado por um novo build Maven.
+Em 19/11/2026, esse caminho foi verificado com JDK 26 e compatibilidade de linguagem/API/bytecode 17. Foram aprovadas 135 verificações Java e 51 verificações JavaScript. As 30 verificações HTTP com acesso somente de leitura ao Oracle da FIAP são do ensaio local anterior; não foram repetidas após a configuração de deploy. Executar em um **runtime JDK 17**, fazer o build Maven/Docker e ensaiar uma gravação/releitura no endereço publicado continuam pendentes neste ambiente. Não use o JAR antigo em `target/sensimap-0.1.0.jar` como evidência desta etapa; ele só será atualizado por um novo build Maven.
 
 ## Modelo, exclusões e dados de demonstração
 

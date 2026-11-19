@@ -255,6 +255,15 @@ classDiagram
     class ApiServer {
         +iniciar()$ void
     }
+    class ServidorConfig {
+        ~String host
+        ~int port
+        ~Set~String~ origensPermitidas
+        ~boolean remoto
+        +fromEnvironment()$ ServidorConfig
+        +fromEnvironment(Map ambiente)$ ServidorConfig
+        +originAllowed(String origin) boolean
+    }
     class ApiHandler {
         -DatabaseConfig config
         +handle(HttpExchange exchange) void
@@ -280,6 +289,7 @@ classDiagram
         +escrever(Object valor)$ String
     }
     Main ..> ApiServer
+    ApiServer --> ServidorConfig
     ApiServer --> ApiHandler
     ApiHandler --> DatabaseConfig
     ApiHandler --> UsuarioService
@@ -292,5 +302,5 @@ classDiagram
     ApiHandler ..> Parametros
     ApiHandler ..> RespostaJson
     ApiHandler ..> JsonUtil
-    note for ApiServer "Escuta somente 127.0.0.1:8080 e serve uma lista fechada de recursos."
+    note for ApiServer "Local: 127.0.0.1:8080. Publicado: 0.0.0.0:PORT, origem HTTPS permitida e proxy da Vercel."
     note for ApiHandler "Uma conexão e uma transação por requisição mutável."

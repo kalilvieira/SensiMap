@@ -1,5 +1,13 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": null,
-  "outputDirectory": "src/main/resources/web"
+  "outputDirectory": "src/main/resources/web",
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "${BACKEND_URL}/api/$1",
+      "env": ["BACKEND_URL"]
+    },
+    { "handle": "filesystem" }
+  ]
 }

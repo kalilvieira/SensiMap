@@ -1,6 +1,6 @@
 async function requestAuth(rota,metodo='GET',dados){
-  const r=await fetch(`/api/auth/${rota}`,{method:metodo,credentials:'same-origin',headers:metodo==='GET'?{}:{'Content-Type':'application/x-www-form-urlencoded','X-SensiMap':'local'},body:metodo==='GET'?undefined:new URLSearchParams(dados??{})});
-  let body;try{body=await r.json();}catch{throw new Error('Resposta inesperada do servidor.');}
+  let r;try{r=await fetch(`/api/auth/${rota}`,{method:metodo,credentials:'same-origin',headers:metodo==='GET'?{}:{'Content-Type':'application/x-www-form-urlencoded','X-SensiMap':'local'},body:metodo==='GET'?undefined:new URLSearchParams(dados??{})});}catch{throw new Error('Serviço indisponível. Tente novamente em instantes.');}
+  let body;try{body=await r.json();}catch{throw new Error('O serviço não respondeu corretamente. Tente novamente em instantes.');}
   if(!r.ok)throw new Error(body.erro||'Não foi possível concluir o acesso.');return body;
 }
 function destinoSeguro(valor){

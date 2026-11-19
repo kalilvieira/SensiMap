@@ -14,8 +14,8 @@ import java.util.Set;
 
 final class ApiHandler implements HttpHandler {
     private final DatabaseConfig config;
-    private final GerenciadorSessoes sessoes=new GerenciadorSessoes();
-    ApiHandler(DatabaseConfig config){this.config=config;}
+    private final GerenciadorSessoes sessoes;
+    ApiHandler(DatabaseConfig config,boolean cookieSeguro){this.config=config;this.sessoes=new GerenciadorSessoes(cookieSeguro);}
 
     @Override public void handle(HttpExchange x)throws IOException {
         try {
