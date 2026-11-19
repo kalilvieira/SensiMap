@@ -251,7 +251,7 @@ O site exige `DB_URL`, `DB_USER` e `DB_PASSWORD`. Sem as três variáveis, o ser
 Áreas e páginas disponíveis:
 
 - **Área pública:** Início, Entrar e Cadastrar. O menu inicial não expõe as funções internas;
-- **Área do usuário:** Explorar e Contribuir, acessíveis depois do cadastro ou entrada por pseudônimo;
+- **Área do usuário:** Explorar e Contribuir, acessíveis depois do cadastro ou entrada por pseudônimo. O colaborador pode adicionar um local e registrar percepções; edição e exclusão de locais não ficam disponíveis na interface;
 - **Saída:** encerra a sessão e retorna à página inicial.
 
 Não existe acesso administrativo na interface ou na autenticação. Em modo Oracle, o cadastro de usuário grava pseudônimo e credencial com perfil `USUARIO`; PBKDF2-HMAC-SHA256 usa salt aleatório e 120 mil iterações. O servidor mantém um token opaco por oito horas em cookie `HttpOnly`, `SameSite=Strict` e, no ambiente publicado, `Secure`; ele limita avaliações ao usuário da sessão. Nenhum cadastro, senha ou percepção é salvo no navegador. Reiniciar o backend encerra todas as sessões, mas os usuários e relatos continuam no Oracle.
@@ -289,11 +289,11 @@ As regras e a ausência de persistência no navegador podem ser verificadas sepa
 node --experimental-default-type=module scripts/verificar-web.mjs
 ```
 
-Em 19/11/2026, esse caminho foi verificado com JDK 26 e compatibilidade de linguagem/API/bytecode 17. Foram aprovadas 135 verificações Java e 51 verificações JavaScript. As 30 verificações HTTP com acesso somente de leitura ao Oracle da FIAP são do ensaio local anterior; não foram repetidas após a configuração de deploy. Executar em um **runtime JDK 17**, fazer o build Maven/Docker e ensaiar uma gravação/releitura no endereço publicado continuam pendentes neste ambiente. Não use o JAR antigo em `target/sensimap-0.1.0.jar` como evidência desta etapa; ele só será atualizado por um novo build Maven.
+Em 19/11/2026, esse caminho foi verificado com JDK 26 e compatibilidade de linguagem/API/bytecode 17. Foram aprovadas 136 verificações Java e 53 verificações JavaScript. As 30 verificações HTTP com acesso somente de leitura ao Oracle da FIAP são do ensaio local anterior; não foram repetidas após a configuração de deploy. Executar em um **runtime JDK 17** e ensaiar a criação de local e a releitura no endereço publicado continuam pendentes neste ambiente. Não use o JAR antigo em `target/sensimap-0.1.0.jar` como evidência desta etapa; ele só será atualizado por um novo build Maven.
 
 ## Modelo, exclusões e dados de demonstração
 
-São seis tabelas, incluindo `CONTA_ACESSO` e a N:N entre local e estímulo. A carga tem 3 pseudônimos de relatos, nenhuma credencial pré-cadastrada, 10 locais reais de São Paulo, 5 estímulos, 10 associações simuladas e 10 avaliações simuladas: Biblioteca Mário de Andrade com 4, Praça das Artes com 2, Centro Cultural São Paulo com 1, Mercado Municipal Paulistano com 3 e os outros 6 locais sem avaliações. As contas são criadas somente pelo cadastro da aplicação. As datas fictícias são `2026-11-01`.
+São seis tabelas, incluindo `CONTA_ACESSO` e a N:N entre local e estímulo. A carga tem 3 pseudônimos de relatos, nenhuma credencial pré-cadastrada, 10 locais reais de São Paulo, 5 estímulos, 10 associações simuladas e 10 avaliações simuladas: Biblioteca Mário de Andrade com 4, Praça das Artes com 2, Centro Cultural São Paulo com 1, Mercado Municipal Paulistano com 3 e os outros 6 locais sem avaliações. As contas são criadas somente pelo cadastro da aplicação. As datas fictícias são `2026-11-01`. Novos locais enviados pela área do usuário são identificados como registros colaborativos, não como parte da carga simulada.
 
 Excluir usuário ou local com avaliações é impedido pela FK. Avaliações podem ser excluídas pelo comando `avaliacao-excluir ID`. Excluir um local sem avaliações ou um estímulo remove automaticamente suas associações N:N, sem apagar a outra entidade. A duplicação da mesma visita (usuário, local, data e período) é impedida por `UNIQUE`.
 

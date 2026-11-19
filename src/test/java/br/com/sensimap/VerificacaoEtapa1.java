@@ -36,6 +36,7 @@ public final class VerificacaoEtapa1 {
         // Coordenadas abaixo são somente limites matemáticos de teste, não locais reais.
         verificar(local(new BigDecimal("-90"), new BigDecimal("180")).isDadosDemonstrativos(), "Limites geográficos");
         verificar(local(null, null).getLatitude() == null, "Coordenadas ausentes");
+        verificar(!new Local("Local colaborativo", null, "Bairro", null, null, null, false).isDadosDemonstrativos(), "Local colaborativo identificado");
         verificar(avaliacao(1, 5, 3).getMovimento() == 5, "Notas válidas independentes");
         for (int invalida : new int[] {0, 6}) {
             rejeitar(() -> avaliacao(invalida, 3, 3));

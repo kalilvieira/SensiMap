@@ -12,7 +12,7 @@ export function validar(tipo, v) {
     const coord = (v,n,limite) => { if(v===null||v===undefined||String(v).trim()==='') return null; const x=Number(v); if(!Number.isFinite(x)||Math.abs(x)>limite||Math.abs(x*1e6-Math.round(x*1e6))>0.00001) throw new Error(`${n} deve estar na faixa válida e ter até 6 casas decimais.`); return x; };
     const latitude=coord(v.latitude,'Latitude',90),longitude=coord(v.longitude,'Longitude',180);
     if((latitude===null)!==(longitude===null)) throw new Error('Informe latitude e longitude juntas.');
-    return {nome:texto(v.nome,'Nome',120,true),bairro:texto(v.bairro,'Bairro',80,true),endereco:texto(v.endereco,'Endereço',180),descricao:texto(v.descricao,'Descrição',500),latitude,longitude,dados_demonstrativos:true};
+    return {nome:texto(v.nome,'Nome',120,true),bairro:texto(v.bairro,'Bairro',80,true),endereco:texto(v.endereco,'Endereço',180),descricao:texto(v.descricao,'Descrição',500),latitude,longitude,dados_demonstrativos:false};
   }
   if(tipo==='avaliacoes') {
     if(!/^\d{4}-\d{2}-\d{2}$/.test(v.data_visita??'')) throw new Error('Informe uma data válida.');

@@ -9,12 +9,12 @@ Registro atualizado em 19/11/2026. Resultados abaixo foram observados neste ambi
 | `java -version` | Oracle JDK 26 disponível; nenhum runtime JDK 17 listado por `java_home -V` |
 | `mvn clean package` | Não executado: shell retornou `mvn: command not found` (saída 127) |
 | `sh scripts/verificar-local.sh` | Saída 0; compilação de produção/testes com `javac --release 17` e JAR gerado |
-| `VerificacaoEtapa1` | 42 verificações aprovadas: entidades, entradas inválidas, configuração e descoberta do driver |
+| `VerificacaoEtapa1` | 43 verificações aprovadas: entidades, local colaborativo, entradas inválidas, configuração e descoberta do driver |
 | `VerificacaoEtapa2` | 38 verificações aprovadas: n=0/1/2/3+, limites 2,00/3,50, arredondamento e dimensões independentes |
 | `VerificacaoJdbcUtil` | 11 verificações aprovadas: categorias de erro sem mensagem interna e escape de busca |
 | `VerificacaoWeb` | 37 verificações aprovadas: escape JSON, parâmetros URL-encoded, IDs, notas, datas, períodos, PBKDF2 e configuração HTTP local/publicada |
 | `VerificacaoAuth` | 7 verificações aprovadas: cadastro de usuário, hash sem senha original, login, senha errada e duplicidade |
-| `scripts/verificar-web.mjs` | 51 verificações aprovadas: classificações, agregação, validação client-side, contrato da API de autenticação, falha de rede controlada, ausência de armazenamento local e ausência de endereços locais nas mensagens publicadas |
+| `scripts/verificar-web.mjs` | 53 verificações aprovadas: classificações, agregação, validação client-side, formulário de novo local, contrato da API de autenticação, falha de rede controlada e ausência de armazenamento local |
 | `vercel.json` | JSON válido; rota `/api/*` preparada para `BACKEND_URL` e arquivos estáticos preservados |
 | Build Docker / serviço público | Não executado: Docker e Maven não estão instalados neste ambiente; a tentativa de escutar em interface pública também não pôde ser concluída aqui |
 | `Main --ajuda` no JAR local | Saída 0; comandos de CRUD e demonstração presentes |
@@ -31,7 +31,7 @@ Registro atualizado em 19/11/2026. Resultados abaixo foram observados neste ambi
 | `scripts/verificar-http.py` | 30 verificações aprovadas com servidor em modo Oracle: páginas/assets atuais, ausência de admin/demo, controles de origem, conexão ao banco e redirecionamento de `localhost` para `127.0.0.1` |
 | Renderização/exportação dos diagramas | Concluída; UML em PDF A2 horizontal e ER em PDF A3 horizontal, ambos renderizados novamente em PNG e inspecionados sem cortes ou sobreposições |
 
-Os 186 testes locais (135 Java e 51 JavaScript) e os 30 testes HTTP do ensaio anterior não substituem o roteiro completo de escrita e releitura. A autenticação de serviço foi verificada com DAOs em memória; o teste HTTP anterior confirmou a conexão ao Oracle real, mas permaneceu somente leitura. Não foi utilizado um substituto de Oracle para declarar persistência funcional. A compilação com `--release 17` limita as APIs e o bytecode, mas não equivale a executar em runtime JDK 17. O build Maven/Docker, a execução pública e a conectividade do provedor com o Oracle FIAP deverão ser confirmados no ambiente de entrega.
+Os 189 testes locais (136 Java e 53 JavaScript) e os 30 testes HTTP do ensaio anterior não substituem o roteiro completo de escrita e releitura. A autenticação de serviço foi verificada com DAOs em memória; o teste HTTP anterior confirmou a conexão ao Oracle real, mas permaneceu somente leitura. Não foi utilizado um substituto de Oracle para declarar persistência funcional. A compilação com `--release 17` limita as APIs e o bytecode, mas não equivale a executar em runtime JDK 17. A criação e releitura de um local colaborativo ainda devem ser confirmadas no serviço publicado e no Oracle FIAP.
 
 O JAR desta execução está em `target/verificacao-local/sensimap.jar`. O arquivo preexistente `target/sensimap-0.1.0.jar` não foi recompilado pelo Maven nesta sessão.
 

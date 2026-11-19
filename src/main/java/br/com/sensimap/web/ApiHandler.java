@@ -92,7 +92,7 @@ final class ApiHandler implements HttpHandler {
         var avaliacoes=new AvaliacaoService(new JdbcAvaliacaoDAO(c),usuarios,locais);
         var associacoes=new LocalEstimuloService(new JdbcLocalEstimuloDAO(c),locais,estimulos);
         if(sessao.perfil()!=PerfilAcesso.USUARIO)throw new HttpFalha(403,"Acesso não disponível.");
-        if(!method.equals("GET")&&!tipo.equals("avaliacoes"))throw new HttpFalha(403,"Operação não disponível para usuários.");
+        if(!method.equals("GET")&&!Set.of("avaliacoes","locais").contains(tipo))throw new HttpFalha(403,"Operação não disponível para usuários.");
         if(method.equals("DELETE"))throw new HttpFalha(403,"Exclusão não disponível pela interface.");
 
         if(s.length>=4){
@@ -111,8 +111,10 @@ final class ApiHandler implements HttpHandler {
             default->id==null?avaliacoes.listar():avaliacoes.buscar(id);};
         boolean inserir=method.equals("POST")&&id==null,editar=method.equals("PUT")&&id!=null;
         if(!inserir&&!editar)throw new HttpFalha(405,"Método não permitido nesta rota.");
-        if(!tipo.equals("avaliacoes"))throw new HttpFalha(403,"Operação não disponível para usuários.");
         switch(tipo){
+            case "locais":
+                if(!inserir)throw new HttpFalha(403,"Usuários podem adicionar locais, mas não editar ou excluir os existentes.");
+                return locais.cadastrar(new Local(p.texto("nome"),p.texto("endereco"),p.texto("bairro"),p.texto("descricao"),null,null,false));
             case "avaliacoes":
                 long usuarioId=p.id("usuario_id");
                 if(usuarioId!=sessao.usuarioId())throw new HttpFalha(403,"Você só pode registrar percepções no seu perfil.");

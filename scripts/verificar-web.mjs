@@ -24,6 +24,7 @@ for(const data of ['2026-02-30','2099-01-01','data inválida'])
 check(()=>assert.throws(()=>validar('avaliacoes',{...avaliacao,periodo:'MADRUGADA'})));
 check(()=>assert.throws(()=>validar('usuarios',{apelido:' '.repeat(10)})));
 check(()=>assert.throws(()=>validar('locais',{nome:'Local',bairro:'Bairro',latitude:1,longitude:null})));
+check(()=>assert.equal(validar('locais',{nome:'Local colaborativo',bairro:'Bairro'}).dados_demonstrativos,false));
 
 const chamadas=[];
 globalThis.fetch=async (url,opcoes={})=>{
@@ -64,5 +65,7 @@ check(()=>assert.doesNotMatch(paginaInicial,/id="pagina-status"/));
 check(()=>assert.doesNotMatch(paginaInicial,/js\/inicio\.js/));
 const paginaCadastro=await readFile(new URL('../src/main/resources/web/cadastro.html',import.meta.url),'utf8');
 check(()=>assert.doesNotMatch(paginaCadastro,/ambiente local|autenticação segura de produção/));
+const paginaContribuir=await readFile(new URL('../src/main/resources/web/contribuir.html',import.meta.url),'utf8');
+check(()=>assert.match(paginaContribuir,/id="form-local"/));
 
 console.log(`${checks} verificações JavaScript aprovadas. Persistência local desativada; sem acesso ao Oracle.`);
