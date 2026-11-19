@@ -11,7 +11,7 @@ import java.util.concurrent.Executors;
 /** Servidor exclusivamente local. Não registra IPs nem expõe arquivos do projeto. */
 public final class ApiServer {
     private static final Set<String> ARQUIVOS=Set.of("index.html","login.html","cadastro.html","locais.html","contribuir.html","favicon.svg",
-            "css/styles.css","js/api.js","js/regras.js","js/ui.js","js/auth.js","js/inicio.js","js/login.js","js/cadastro.js","js/locais.js","js/contribuir.js");
+            "css/styles.css","js/api.js","js/regras.js","js/ui.js","js/auth.js","js/login.js","js/cadastro.js","js/locais.js","js/contribuir.js");
     private ApiServer() { }
     public static void iniciar() throws IOException {
         DatabaseConfig config=DatabaseConfig.fromEnvironment();

@@ -56,4 +56,8 @@ for(const arquivo of ['api.js','auth.js','cadastro.js','contribuir.js']){
   check(()=>assert.doesNotMatch(fonte,/['\"]DEMO['\"]/));
 }
 
+const paginaInicial=await readFile(new URL('../src/main/resources/web/index.html',import.meta.url),'utf8');
+check(()=>assert.doesNotMatch(paginaInicial,/id="pagina-status"/));
+check(()=>assert.doesNotMatch(paginaInicial,/js\/inicio\.js/));
+
 console.log(`${checks} verificações JavaScript aprovadas. Persistência local desativada; sem acesso ao Oracle.`);
