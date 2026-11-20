@@ -4,6 +4,33 @@ MVP acadêmico da FIAP Global Solution 2026/2 para consulta de percepções sens
 
 **Dados simulados para demonstração.** Os nomes e endereços dos dez locais da carga são reais e foram conferidos em fontes oficiais. As avaliações e associações de estímulos continuam fictícias e subjetivas: não são medições de decibéis, contagens de pessoas, avaliações clínicas ou garantias de segurança. Não há geolocalização do usuário ou dados médicos. Senhas de acesso são armazenadas somente como PBKDF2 com salt, nunca em texto puro.
 
+## Grupo e links da entrega
+
+**Nome do grupo:** SensiMap
+
+| Integrante | RM |
+|---|---:|
+| Anderson Pereira de Sales | 87130 |
+| Kalil Vieira Pereira da Silva | 565872 |
+| Lorenzo Ivo Costa Bona | 565998 |
+
+- **Deploy público:** [https://sensimap-kalil.onrender.com](https://sensimap-kalil.onrender.com)
+- **Vídeo pitch público (2min41):** [https://youtu.be/XDAXqZpDnJ0](https://youtu.be/XDAXqZpDnJ0)
+- **Repositório:** [https://github.com/kalilvieira/SensiMap](https://github.com/kalilvieira/SensiMap)
+
+## Conformidade com o enunciado
+
+| Critério | Implementação na entrega |
+|---|---|
+| Java + JDBC | Java 17, Oracle JDBC, POO, `PreparedStatement`, tratamento de erros e camadas `model`, `dao`, `service`, `web`, `config` e `util` |
+| CRUD completo | DAOs e comandos de console inserem, listam, buscam, atualizam e excluem as entidades principais; a web cobre cadastro de acesso, locais colaborativos e avaliações |
+| Banco relacional | Seis tabelas com PK, FK, `NOT NULL`, `UNIQUE`, `CHECK`, carga inicial e relação N:N `LOCAL_ESTIMULO` |
+| Diagramas | UML e ER em PDF na raiz; fontes Mermaid editáveis em `docs/` |
+| Interface web | Cinco páginas HTML ligadas por navegação segmentada entre área pública e área autenticada, com formulários, listagens, validação JavaScript e layout responsivo |
+| Integração | O site publicado lê e grava no Oracle da FIAP por meio do backend Java; não há persistência no navegador |
+| Relatórios | Consultas com `JOIN`, `AVG`, `COUNT`, `MAX` e filtro por período em `database/03_consultas_relatorios.sql` |
+| Entrega | README de execução, scripts SQL, dois diagramas, `integrantes.txt`, link público do pitch e declaração de IA |
+
 ## Banco de dados: Oracle da FIAP
 
 A entrega utiliza **Oracle no servidor da FIAP**, acessado pelo Java via JDBC. Oracle é uma das opções de banco relacional aceitas pelo enunciado da Global Solution.
@@ -27,7 +54,7 @@ pom.xml                            build Java 17 e driver Oracle
 .env.example                       modelo sem senha real
 Dockerfile                         build e execução do backend Java 17
 render.yaml                        infraestrutura declarativa do backend
-vercel.json                        frontend estático e proxy de /api
+vercel.json                        alternativa de hospedagem estática; não usada no deploy final
 database/01_schema.sql              seis tabelas, índices e gatilho
 database/02_seed.sql                locais reais e relatos simulados
 database/03_consultas_relatorios.sql JOIN, AVG/COUNT e locais sem avaliações
@@ -55,7 +82,7 @@ docs/diagrama_classes.mmd           entidades, DAOs, serviços e console
 Diagrama_ER_SensiMap.pdf            diagrama ER final em A3 horizontal
 Diagrama_Classes_SensiMap.pdf       diagrama UML final em A2 horizontal
 docs/testes.md                     resultados reais e roteiro de integração
-integrantes.txt                    campos a preencher pelo grupo
+integrantes.txt                    grupo, integrantes, RMs, pitch e deploy
 ```
 
 Fluxo de console: `Main → ConsoleCrud → Service → DAO JDBC → Oracle`. Fluxo web com Oracle configurado: `HTML/JS → ApiServer → ApiHandler → Service → DAO JDBC → Oracle`. Cada requisição abre sua própria conexão, controla commit/rollback e a fecha ao terminar. As entidades são imutáveis e validam os campos no construtor. Os serviços consultam a existência das referências; FKs e restrições protegem também contra alterações concorrentes.
@@ -165,12 +192,13 @@ java -cp 'target/classes:target/test-classes:target/dependency/*' br.com.sensima
 java -cp 'target/classes:target/test-classes:target/dependency/*' br.com.sensimap.VerificacaoEtapa2
 java -cp 'target/classes:target/test-classes:target/dependency/*' br.com.sensimap.dao.jdbc.VerificacaoJdbcUtil
 java -cp 'target/classes:target/test-classes:target/dependency/*' br.com.sensimap.web.VerificacaoWeb
+java -cp 'target/classes:target/test-classes:target/dependency/*' br.com.sensimap.service.VerificacaoAuth
 java -Duser.timezone=America/Sao_Paulo -cp 'target/classes:target/dependency/*' br.com.sensimap.app.Main
 ```
 
 No Windows, substitua `:` por `;` nos classpaths. O build gera `target/sensimap-0.1.0.jar` e copia o driver para `target/dependency`. Também é possível usar esse JAR no lugar de `target/classes` no classpath. Ele não é um JAR executável via `java -jar`.
 
-`mvn package` compila os verificadores, mas **não os executa automaticamente**: eles têm `main`, sem JUnit ou dependências adicionais. Execute os quatro comandos de verificação explicitamente. Eles verificam domínio, configuração, descoberta do driver, classificação, JSON, parâmetros HTTP e mensagens controladas, sem acessar o banco.
+`mvn package` compila os verificadores, mas **não os executa automaticamente**: eles têm `main`, sem JUnit ou dependências adicionais. Execute os cinco comandos de verificação explicitamente. Eles verificam domínio, configuração, descoberta do driver, classificação, JSON, parâmetros HTTP, autenticação e mensagens controladas, sem acessar o banco.
 
 O `Main` abre uma conexão real com as variáveis configuradas e usa `PreparedStatement` e `try-with-resources`. Somente após obter o resultado do Oracle imprime:
 
@@ -228,7 +256,7 @@ sensimap estimulo-excluir ESTIMULO_ID
 sensimap usuario-excluir USUARIO_ID
 ```
 
-A ajuda lista também os comandos de consulta por ID. As exclusões só são realizadas por comandos explícitos. O console não pede confirmação adicional; a interface web pede confirmação antes de excluir. Os comandos de local criam dados demonstrativos sem coordenadas e editam nome, bairro e descrição; o DAO aceita todos os atributos válidos do modelo. Endereço e coordenadas permanecem preservados ao editar pelo console.
+A ajuda lista também os comandos de consulta por ID. As exclusões só são realizadas por comandos explícitos no console; a interface web não oferece exclusão. Os comandos de local criam dados demonstrativos sem coordenadas e editam nome, bairro e descrição; o DAO aceita todos os atributos válidos do modelo. Endereço e coordenadas permanecem preservados ao editar pelo console.
 
 ## Abrir a interface web
 
@@ -258,19 +286,19 @@ Não existe acesso administrativo na interface ou na autenticação. Em modo Ora
 
 O frontend cria conteúdo dinâmico com `textContent`; comentários não são interpretados como HTML. As três dimensões permanecem independentes, o recorte por período é exibido e locais sem relatos explicam que ausência de registros não significa ausência de estímulos. A API exige sessão de usuário para os dados internos; somente configuração e rotas de autenticação são públicas. O CRUD administrativo permanece demonstrável pelo console Java/JDBC, sem uma área web dedicada.
 
-## Publicar frontend e backend
+## Deploy público no Render
 
-A Vercel hospeda somente os arquivos estáticos. Cadastro, login, catálogo e avaliações dependem do backend Java; por isso o `vercel.json` encaminha `/api/*` para o endereço configurado em `BACKEND_URL`. O fluxo publicado é `navegador → Vercel /api → backend Java → Oracle FIAP`.
+O frontend e o backend estão publicados juntos em um único Web Service Docker:
 
-1. No Render, crie um **Blueprint** a partir deste repositório. O arquivo `render.yaml` cria o serviço Docker `sensimap-api`.
-2. Cadastre no Render os segredos `DB_URL`, `DB_USER` e `DB_PASSWORD`. Em `APP_ORIGIN`, informe a URL exata da Vercel, por exemplo `https://seu-projeto.vercel.app`, sem caminho nem barra final.
-3. Aguarde o serviço ficar disponível e copie sua URL HTTPS, por exemplo `https://sensimap-api.onrender.com`.
-4. Na Vercel, em **Project Settings → Environment Variables**, crie `BACKEND_URL` com essa URL, sem barra final, para o ambiente Production. Faça um novo deploy.
-5. Abra `https://seu-projeto.vercel.app/api/config`. A resposta esperada é `{"modo":"ORACLE"}`. Depois teste cadastro, saída e login pelo domínio da Vercel.
+**[https://sensimap-kalil.onrender.com](https://sensimap-kalil.onrender.com)**
 
-Não coloque credenciais no GitHub, no `vercel.json` ou no `render.yaml`. No plano gratuito, o Render pode suspender o backend após inatividade; a primeira solicitação seguinte pode demorar cerca de um minuto. Como as sessões ficam na memória do processo, uma reinicialização exige novo login, sem apagar o cadastro nem os relatos do Oracle. A rede do provedor também precisa conseguir alcançar o endereço Oracle da FIAP; se o banco aceitar somente VPN/rede institucional, será necessário hospedar o backend em um ambiente com esse acesso.
+Fluxo publicado: `navegador → ApiServer Java → ApiHandler → Service → DAO JDBC → Oracle FIAP`. O mesmo `ApiServer` entrega os arquivos HTML/CSS/JS e as rotas `/api`; a Vercel não participa do deploy final.
 
-Referências: [Web Services do Render](https://render.com/docs/web-services), [variáveis de ambiente do Render](https://render.com/docs/configure-environment-variables), [plano gratuito do Render](https://render.com/docs/free) e [configuração `vercel.json`](https://vercel.com/docs/project-configuration/vercel-json).
+Para reproduzir o deploy, conecte este repositório a um Web Service Docker no Render, mantenha a branch `main` e a raiz do repositório, e configure como segredos `DB_URL`, `DB_USER`, `DB_PASSWORD` e `APP_ORIGIN`. `APP_ORIGIN` deve ser `https://sensimap-kalil.onrender.com`, sem barra final. O processo lê `PORT` fornecida pelo Render, escuta em `0.0.0.0` e inicia pela instrução `CMD` do `Dockerfile`.
+
+Não coloque credenciais no GitHub, no `Dockerfile` ou no `render.yaml`. No plano gratuito, o Render pode suspender o serviço após inatividade; a primeira solicitação seguinte pode demorar cerca de um minuto. Reiniciar o backend encerra sessões em memória, mas não apaga usuários, locais ou avaliações persistidos no Oracle.
+
+Referências: [Web Services do Render](https://render.com/docs/web-services), [Docker no Render](https://render.com/docs/docker), [variáveis de ambiente](https://render.com/docs/configure-environment-variables) e [plano gratuito](https://render.com/docs/free).
 
 ## Verificação local sem Maven
 
@@ -301,12 +329,15 @@ O schema e a carga inicial foram aplicados e conferidos no Oracle da FIAP pelo D
 
 As telas foram abertas no Safari. O servidor web não oferece fallback local: sem Oracle disponível, as operações retornam erro e nenhuma mensagem afirma que houve gravação.
 
-## Resultados e próximos passos
+## Resultados da entrega
 
-Consulte [docs/testes.md](docs/testes.md) para evidências e limitações. Para reproduzir a conexão real com a FIAP e executar os scripts, são necessários `DB_URL`, `DB_USER`, `DB_PASSWORD`, rede e privilégios. Os diagramas finais estão na raiz em `Diagrama_ER_SensiMap.pdf` e `Diagrama_Classes_SensiMap.pdf`; as fontes editáveis permanecem em `docs/*.mmd`. Preencha `integrantes.txt` com os dados reais do grupo e o link público do pitch.
+Consulte [docs/testes.md](docs/testes.md) para evidências e limitações. Para reproduzir a conexão real com a FIAP e executar os scripts, são necessários `DB_URL`, `DB_USER`, `DB_PASSWORD`, rede e privilégios. Os diagramas finais estão na raiz em `Diagrama_ER_SensiMap.pdf` e `Diagrama_Classes_SensiMap.pdf`; as fontes editáveis permanecem em `docs/*.mmd`.
 
-Próxima etapa: ensaiar cadastro e avaliação pelo navegador com conferência no DBeaver, revisar o pacote final, preencher as identificações reais do grupo e acrescentar o link público do pitch.
+Em 19/11/2026, o link do pitch respondeu publicamente no YouTube, com duração de 161 segundos (2min41), e o deploy respondeu HTTP 200 por `GET`. Antes do envio na plataforma, o grupo deve testar o pitch em uma janela anônima e executar no site publicado a jornada cadastro → login → adicionar local → registrar percepção → consultar em Explorar.
 
-## Uso de IA
+## Uso de IA generativa
 
-OpenAI Codex foi utilizado como apoio para estruturar o projeto, escrever código Java, scripts SQL, verificações e documentação. Cabe ao grupo revisar, compreender, validar no Oracle institucional e explicar o material na banca. O produto não usa APIs de IA, serviços pagos ou frameworks de aplicação.
+- **OpenAI Codex:** apoio na interpretação do enunciado, estruturação do projeto, implementação e revisão de código Java/JDBC, HTML/CSS/JavaScript, scripts SQL, testes, diagnóstico de erros e documentação.
+- **Revisão humana:** o grupo revisou as alterações, executou o sistema, configurou o Oracle/Render e permanece responsável por compreender e explicar toda a solução na banca.
+
+O produto SensiMap não usa IA em tempo de execução, não chama APIs de IA e não envia dados de usuários a modelos externos.

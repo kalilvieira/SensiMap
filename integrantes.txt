@@ -1,10 +1,12 @@
-Nome do grupo: A PREENCHER PELOS INTEGRANTES
+Nome do grupo: SensiMap
 
-Integrantes (até 5; preencher nomes e RMs reais):
-1. Nome:                         RM:
-2. Nome:                         RM:
-3. Nome:                         RM:
-4. Nome:                         RM:
-5. Nome:                         RM:
+Integrantes:
+1. Anderson Pereira de Sales - RM 87130
+2. Kalil Vieira Pereira da Silva - RM 565872
+3. Lorenzo Ivo Costa Bona - RM 565998
 
-Link público do vídeo pitch (até 3 minutos): A PREENCHER
+Link público do vídeo pitch (até 3 minutos):
+https://youtu.be/XDAXqZpDnJ0
+
+Link público do deploy:
+https://sensimap-kalil.onrender.com

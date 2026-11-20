@@ -1,13 +1,13 @@
 # Verificações — Etapa 4
 
-Registro atualizado em 19/11/2026. Resultados abaixo foram observados neste ambiente; a conexão HTTP com o Oracle foi comprovada sem criar registros de teste permanentes. O CRUD Oracle completo e o endereço publicado ainda devem ser exercitados no roteiro de apresentação.
+Registro atualizado em 19/11/2026. Resultados abaixo foram observados neste ambiente; a conexão HTTP com o Oracle e o endereço publicado foram comprovados sem criar registros de teste permanentes. O CRUD Oracle completo ainda deve ser exercitado no roteiro de apresentação.
 
 ## Ambiente e resultados reais
 
 | Verificação | Resultado |
 |---|---|
 | `java -version` | Oracle JDK 26 disponível; nenhum runtime JDK 17 listado por `java_home -V` |
-| `mvn clean package` | Não executado: shell retornou `mvn: command not found` (saída 127) |
+| `mvn clean package` local | Não executado: shell retornou `mvn: command not found` (saída 127); o build Maven da imagem Docker concluiu no Render |
 | `sh scripts/verificar-local.sh` | Saída 0; compilação de produção/testes com `javac --release 17` e JAR gerado |
 | `VerificacaoEtapa1` | 43 verificações aprovadas: entidades, local colaborativo, entradas inválidas, configuração e descoberta do driver |
 | `VerificacaoEtapa2` | 38 verificações aprovadas: n=0/1/2/3+, limites 2,00/3,50, arredondamento e dimensões independentes |
@@ -15,8 +15,9 @@ Registro atualizado em 19/11/2026. Resultados abaixo foram observados neste ambi
 | `VerificacaoWeb` | 37 verificações aprovadas: escape JSON, parâmetros URL-encoded, IDs, notas, datas, períodos, PBKDF2 e configuração HTTP local/publicada |
 | `VerificacaoAuth` | 7 verificações aprovadas: cadastro de usuário, hash sem senha original, login, senha errada e duplicidade |
 | `scripts/verificar-web.mjs` | 53 verificações aprovadas: classificações, agregação, validação client-side, formulário de novo local, contrato da API de autenticação, falha de rede controlada e ausência de armazenamento local |
-| `vercel.json` | JSON válido; rota `/api/*` preparada para `BACKEND_URL` e arquivos estáticos preservados |
-| Build Docker / serviço público | Não executado: Docker e Maven não estão instalados neste ambiente; a tentativa de escutar em interface pública também não pôde ser concluída aqui |
+| `vercel.json` | JSON válido como alternativa, mas a Vercel não participa do deploy final |
+| Build Docker / serviço público | Deploy do commit `b62fba4` concluído no Render; serviço `sensimap-kalil` ficou Live, raiz respondeu HTTP 200 e `/api/config` retornou modo `ORACLE` |
+| Pitch público | Link do YouTube respondeu HTTP 200 e informou 161 segundos (2min41), abaixo do limite de 3 minutos |
 | `Main --ajuda` no JAR local | Saída 0; comandos de CRUD e demonstração presentes |
 | `Main` com `DB_URL`, `DB_USER` e `DB_PASSWORD` ausentes | Saída 2, mensagem indicando `DB_URL`, sem stack trace |
 | Inspeção dos arquivos `.class` do build local | Todos com major version 61 (bytecode Java 17) |
@@ -45,7 +46,7 @@ java -Duser.timezone=America/Sao_Paulo -cp 'target/verificacao-local/sensimap.ja
 node --experimental-default-type=module scripts/verificar-web.mjs
 ```
 
-Com Maven disponível, execute `mvn clean package` e os quatro verificadores Java pelo classpath descrito no README. Os verificadores são programas com `main` e não rodam automaticamente pelo Surefire.
+Com Maven disponível, execute `mvn clean package` e os cinco verificadores Java pelo classpath descrito no README. Os verificadores são programas com `main` e não rodam automaticamente pelo Surefire.
 
 ## Roteiro Oracle de escrita e releitura
 
@@ -74,9 +75,9 @@ Ao executar os testes pendentes, acrescente data, ambiente, comandos e resultado
 
 ## Próximos critérios de aceite
 
-- Build Maven e execução em JDK 17.
+- Repetir o build Maven local em JDK 17 se esse ambiente estiver disponível; o contêiner Java 17 já compilou e iniciou no Render.
 - Scripts, restrições, CRUD, rollback e persistência comprovados no Oracle institucional.
 - Navegação por teclado e viewport real de smartphone ainda devem ser conferidos manualmente em mais de um navegador.
 - Escrita HTTP no Oracle: criar pelo navegador, conferir no DBeaver e após reload/reinício durante o ensaio do pitch.
 - Autenticação Oracle: cadastrar, sair, entrar novamente, testar senha errada e confirmar `CONTA_ACESSO` sem senha em texto puro.
-- Integrantes reais e link público do pitch preenchidos no pacote final.
+- Testar o link do pitch também em uma janela anônima antes do envio definitivo.
